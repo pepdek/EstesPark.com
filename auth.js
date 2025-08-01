@@ -156,11 +156,41 @@ class AuthManager {
 
     async signInWithGoogle() {
         try {
-            await signInWithPopup(auth, googleProvider);
+            console.log('Attempting Google sign-in...');
+            const result = await signInWithPopup(auth, googleProvider);
+            const user = result.user;
+            
+            console.log('Google sign-in successful:', user.email);
             this.closeModal();
-            this.showMessage('Welcome!', 'success');
+            this.showMessage(`Welcome, ${user.displayName || user.email}!`, 'success');
+            
         } catch (error) {
-            this.showMessage(error.message, 'error');
+            console.error('Google sign-in error:', error);
+            
+            // Handle specific error codes
+            let errorMessage = 'Failed to sign in with Google';
+            
+            switch (error.code) {
+                case 'auth/popup-closed-by-user':
+                    errorMessage = 'Sign-in was cancelled';
+                    break;
+                case 'auth/popup-blocked':
+                    errorMessage = 'Popup was blocked by browser. Please allow popups and try again';
+                    break;
+                case 'auth/cancelled-popup-request':
+                    errorMessage = 'Sign-in was cancelled';
+                    break;
+                case 'auth/unauthorized-domain':
+                    errorMessage = 'This domain is not authorized for Google sign-in. Please contact support';
+                    break;
+                case 'auth/operation-not-allowed':
+                    errorMessage = 'Google sign-in is not enabled. Please contact support';
+                    break;
+                default:
+                    errorMessage = error.message || errorMessage;
+            }
+            
+            this.showMessage(errorMessage, 'error');
         }
     }
 
