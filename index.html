@@ -6,6 +6,8 @@
     <title>EstesPark.com - Your Complete Guide to Colorado's Gateway</title>
     <meta name="description" content="Discover Estes Park, Colorado - the gateway to Rocky Mountain National Park. Find lodging, attractions, dining, and everything you need for your mountain adventure.">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="logo-styles.css">
+    <link rel="stylesheet" href="auth-styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -25,7 +27,11 @@
                     <li><a href="#activities" class="nav-link">Activities</a></li>
                     <li><a href="#real-estate" class="nav-link">Real Estate</a></li>
                     <li><a href="#weddings" class="nav-link">Weddings</a></li>
+                    <li><a href="chat.html" class="nav-link chat-link">AI Chat</a></li>
                 </ul>
+                <div id="authButton">
+                    <button class="auth-trigger">Sign In</button>
+                </div>
                 <div class="hamburger">
                     <span></span>
                     <span></span>
@@ -434,6 +440,25 @@
             </div>
         </section>
 
+        <!-- Featured Partners Section -->
+        <section class="featured-partners">
+            <div class="container">
+                <h2 class="section-title">Our Trusted Partners</h2>
+                <div class="logo-section lodging">
+                    <h3>Lodging Partners</h3>
+                    <div data-logos="lodging"></div>
+                </div>
+                <div class="logo-section dining">
+                    <h3>Dining Partners</h3>
+                    <div data-logos="dining"></div>
+                </div>
+                <div class="logo-section attractions">
+                    <h3>Attraction Partners</h3>
+                    <div data-logos="attractions"></div>
+                </div>
+            </div>
+        </section>
+
         <section class="history">
             <div class="container">
                 <h2 class="section-title">Rich Mountain Heritage</h2>
@@ -488,6 +513,94 @@
                 </div>
             </div>
         </section>
+
+        <!-- Community Section -->
+        <section id="community" class="community">
+            <div class="container">
+                <h2 class="section-title">Community Recommendations</h2>
+                <p class="section-subtitle">Share your favorite places and discover hidden gems recommended by fellow Estes Park visitors</p>
+                
+                <div class="community-actions">
+                    <button class="community-btn auth-trigger" id="addRecommendationBtn">
+                        <i class="fas fa-plus"></i> Share a Recommendation
+                    </button>
+                </div>
+
+                <div id="communityPosts" class="community-posts">
+                    <!-- Posts will be loaded dynamically -->
+                    <div class="community-post">
+                        <div class="post-header">
+                            <div class="post-author">
+                                <i class="fas fa-user-circle"></i>
+                                <span>Sarah M.</span>
+                            </div>
+                            <div class="post-date">2 days ago</div>
+                        </div>
+                        <div class="post-content">
+                            <h4>Hidden gem for breakfast!</h4>
+                            <p>Just discovered the most amazing breakfast spot - Notchtop Bakery & Cafe. Their cinnamon rolls are incredible and the mountain views from the patio are breathtaking. Perfect spot before heading into Rocky Mountain National Park!</p>
+                            <div class="post-tags">
+                                <span class="tag dining">Dining</span>
+                                <span class="tag hidden-gem">Hidden Gem</span>
+                            </div>
+                        </div>
+                        <div class="post-actions">
+                            <button class="vote-btn upvote">
+                                <i class="fas fa-chevron-up"></i>
+                                <span>12</span>
+                            </button>
+                            <button class="vote-btn downvote">
+                                <i class="fas fa-chevron-down"></i>
+                                <span>1</span>
+                            </button>
+                            <button class="action-btn favorite auth-trigger">
+                                <i class="far fa-heart"></i>
+                                <span>Save</span>
+                            </button>
+                            <button class="action-btn comment">
+                                <i class="far fa-comment"></i>
+                                <span>3 Comments</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="community-post">
+                        <div class="post-header">
+                            <div class="post-author">
+                                <i class="fas fa-user-circle"></i>
+                                <span>Mike R.</span>
+                            </div>
+                            <div class="post-date">1 week ago</div>
+                        </div>
+                        <div class="post-content">
+                            <h4>Perfect lodging for families</h4>
+                            <p>Stayed at The Evergreens on Fall River with my family of 5. The cabins are spacious, kids loved the river access, and it's only 1.5 miles from the park entrance. Highly recommend for families!</p>
+                            <div class="post-tags">
+                                <span class="tag lodging">Lodging</span>
+                                <span class="tag family">Family-Friendly</span>
+                            </div>
+                        </div>
+                        <div class="post-actions">
+                            <button class="vote-btn upvote">
+                                <i class="fas fa-chevron-up"></i>
+                                <span>8</span>
+                            </button>
+                            <button class="vote-btn downvote">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                            <button class="action-btn favorite auth-trigger">
+                                <i class="far fa-heart"></i>
+                                <span>Save</span>
+                            </button>
+                            <button class="action-btn comment">
+                                <i class="far fa-comment"></i>
+                                <span>5 Comments</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <footer class="footer">
@@ -533,6 +646,10 @@
         </div>
     </footer>
 
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="auth.js"></script>
     <script src="script.js"></script>
+    <script src="logo-manager.js"></script>
+    <script type="module" src="community.js"></script>
 </body>
 </html>

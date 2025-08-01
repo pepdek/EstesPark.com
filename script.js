@@ -18,8 +18,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const navLinksArray = Array.from(navLinks);
     navLinksArray.forEach(link => {
         link.addEventListener('click', function(e) {
+            const href = this.getAttribute('href');
+            
+            // Handle external links (like chat.html)
+            if (href.includes('.html')) {
+                return; // Let the browser handle the navigation
+            }
+            
+            // Handle internal section links
             e.preventDefault();
-            const targetId = this.getAttribute('href');
+            const targetId = href;
             const targetSection = document.querySelector(targetId);
             
             if (targetSection) {
