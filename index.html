@@ -646,10 +646,17 @@
         </div>
     </footer>
 
-    <script type="module" src="firebase-config.js"></script>
-    <script type="module" src="auth.js"></script>
+    <!-- Firebase CDN -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Initialize Firebase -->
+    <script src="firebase-bundle.js"></script>
+    
+    <!-- App Scripts -->
+    <script src="auth-manager.js"></script>
     <script src="script.js"></script>
     <script src="logo-manager.js"></script>
-    <script type="module" src="community.js"></script>
 </body>
 </html>

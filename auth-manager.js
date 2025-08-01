@@ -1,0 +1,318 @@
+// Browser-compatible authentication manager
+// Uses global Firebase objects instead of ES6 imports
+
+class AuthManager {
+    constructor() {
+        this.currentUser = null;
+        this.authModal = null;
+        this.auth = window.firebaseAuth;
+        this.db = window.firebaseDb;
+        this.googleProvider = window.googleProvider;
+        
+        // Wait for Firebase to be ready
+        if (this.auth) {
+            this.init();
+        } else {
+            // Wait a bit for Firebase to load
+            setTimeout(() => this.init(), 1000);
+        }
+    }
+
+    init() {
+        if (!this.auth) {
+            console.error('Firebase Auth not loaded');
+            return;
+        }
+
+        console.log('AuthManager initializing...');
+        
+        // Listen for auth state changes
+        this.auth.onAuthStateChanged((user) => {
+            this.currentUser = user;
+            this.updateUI();
+            if (user) {
+                this.createUserDocument(user);
+            }
+        });
+
+        // Create auth modal
+        this.createAuthModal();
+        this.setupEventListeners();
+    }
+
+    createAuthModal() {
+        const modalHTML = `
+            <div id="authModal" class="auth-modal">
+                <div class="auth-modal-content">
+                    <span class="auth-close">&times;</span>
+                    <div class="auth-tabs">
+                        <button class="auth-tab active" data-tab="signin">Sign In</button>
+                        <button class="auth-tab" data-tab="signup">Sign Up</button>
+                    </div>
+                    
+                    <div id="signin-form" class="auth-form active">
+                        <h2>Welcome Back!</h2>
+                        <p>Sign in to access AI chat and save your favorites</p>
+                        <form id="signinForm">
+                            <input type="email" id="signin-email" placeholder="Email" required>
+                            <input type="password" id="signin-password" placeholder="Password" required>
+                            <button type="submit" class="auth-btn primary">Sign In</button>
+                        </form>
+                        <div class="auth-divider">
+                            <span>or</span>
+                        </div>
+                        <button id="googleSignin" class="auth-btn google">
+                            <i class="fab fa-google"></i> Continue with Google
+                        </button>
+                    </div>
+                    
+                    <div id="signup-form" class="auth-form">
+                        <h2>Join Our Community</h2>
+                        <p>Create an account to chat with our AI assistant and build your Estes Park itinerary</p>
+                        <form id="signupForm">
+                            <input type="text" id="signup-name" placeholder="Full Name" required>
+                            <input type="email" id="signup-email" placeholder="Email" required>
+                            <input type="password" id="signup-password" placeholder="Password (min 6 characters)" required>
+                            <button type="submit" class="auth-btn primary">Create Account</button>
+                        </form>
+                        <div class="auth-divider">
+                            <span>or</span>
+                        </div>
+                        <button id="googleSignup" class="auth-btn google">
+                            <i class="fab fa-google"></i> Continue with Google
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        this.authModal = document.getElementById('authModal');
+    }
+
+    setupEventListeners() {
+        console.log('Setting up event listeners...');
+        
+        // Modal controls
+        const closeBtn = document.querySelector('.auth-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => this.closeModal());
+        }
+
+        document.addEventListener('click', (e) => {
+            if (e.target === this.authModal) this.closeModal();
+        });
+
+        // Tab switching
+        document.querySelectorAll('.auth-tab').forEach(tab => {
+            tab.addEventListener('click', () => this.switchTab(tab.dataset.tab));
+        });
+
+        // Form submissions
+        const signinForm = document.getElementById('signinForm');
+        const signupForm = document.getElementById('signupForm');
+        
+        if (signinForm) {
+            signinForm.addEventListener('submit', (e) => this.handleSignIn(e));
+        }
+        if (signupForm) {
+            signupForm.addEventListener('submit', (e) => this.handleSignUp(e));
+        }
+        
+        // Google auth buttons
+        const googleSignin = document.getElementById('googleSignin');
+        const googleSignup = document.getElementById('googleSignup');
+        
+        if (googleSignin) {
+            googleSignin.addEventListener('click', () => this.signInWithGoogle());
+        }
+        if (googleSignup) {
+            googleSignup.addEventListener('click', () => this.signInWithGoogle());
+        }
+
+        // Sign out button (will be created dynamically)
+        document.addEventListener('click', (e) => {
+            if (e.target.id === 'signOutBtn') {
+                this.signOut();
+            }
+        });
+
+        // Auth trigger buttons
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('auth-trigger') || e.target.closest('.auth-trigger')) {
+                console.log('Auth trigger clicked');
+                this.openModal();
+            }
+        });
+    }
+
+    switchTab(tab) {
+        document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+        
+        document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+        document.getElementById(`${tab}-form`).classList.add('active');
+    }
+
+    async handleSignIn(e) {
+        e.preventDefault();
+        const email = document.getElementById('signin-email').value;
+        const password = document.getElementById('signin-password').value;
+        
+        try {
+            await this.auth.signInWithEmailAndPassword(email, password);
+            this.closeModal();
+            this.showMessage('Welcome back!', 'success');
+        } catch (error) {
+            this.showMessage(error.message, 'error');
+        }
+    }
+
+    async handleSignUp(e) {
+        e.preventDefault();
+        const name = document.getElementById('signup-name').value;
+        const email = document.getElementById('signup-email').value;
+        const password = document.getElementById('signup-password').value;
+        
+        try {
+            const userCredential = await this.auth.createUserWithEmailAndPassword(email, password);
+            await userCredential.user.updateProfile({ displayName: name });
+            this.closeModal();
+            this.showMessage('Account created successfully!', 'success');
+        } catch (error) {
+            this.showMessage(error.message, 'error');
+        }
+    }
+
+    async signInWithGoogle() {
+        try {
+            console.log('Attempting Google sign-in...');
+            const result = await this.auth.signInWithPopup(this.googleProvider);
+            const user = result.user;
+            
+            console.log('Google sign-in successful:', user.email);
+            this.closeModal();
+            this.showMessage(`Welcome, ${user.displayName || user.email}!`, 'success');
+            
+        } catch (error) {
+            console.error('Google sign-in error:', error);
+            
+            // Handle specific error codes
+            let errorMessage = 'Failed to sign in with Google';
+            
+            switch (error.code) {
+                case 'auth/popup-closed-by-user':
+                    errorMessage = 'Sign-in was cancelled';
+                    break;
+                case 'auth/popup-blocked':
+                    errorMessage = 'Popup was blocked by browser. Please allow popups and try again';
+                    break;
+                case 'auth/cancelled-popup-request':
+                    errorMessage = 'Sign-in was cancelled';
+                    break;
+                case 'auth/unauthorized-domain':
+                    errorMessage = 'This domain is not authorized for Google sign-in. Please contact support';
+                    break;
+                case 'auth/operation-not-allowed':
+                    errorMessage = 'Google sign-in is not enabled. Please contact support';
+                    break;
+                default:
+                    errorMessage = error.message || errorMessage;
+            }
+            
+            this.showMessage(errorMessage, 'error');
+        }
+    }
+
+    async signOut() {
+        try {
+            await this.auth.signOut();
+            this.showMessage('Signed out successfully', 'success');
+        } catch (error) {
+            this.showMessage(error.message, 'error');
+        }
+    }
+
+    async createUserDocument(user) {
+        if (!this.db) return;
+        
+        try {
+            const userRef = this.db.collection('users').doc(user.uid);
+            const userSnap = await userRef.get();
+            
+            if (!userSnap.exists) {
+                await userRef.set({
+                    displayName: user.displayName || 'Anonymous',
+                    email: user.email,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    favorites: {
+                        lodging: [],
+                        dining: [],
+                        attractions: []
+                    },
+                    itinerary: []
+                });
+            }
+        } catch (error) {
+            console.error('Error creating user document:', error);
+        }
+    }
+
+    updateUI() {
+        const authButton = document.getElementById('authButton');
+        if (authButton) {
+            if (this.currentUser) {
+                authButton.innerHTML = `
+                    <div class="user-menu">
+                        <span>Hi, ${this.currentUser.displayName || 'User'}!</span>
+                        <div class="user-dropdown">
+                            <a href="chat.html">AI Chat</a>
+                            <a href="#" id="signOutBtn">Sign Out</a>
+                        </div>
+                    </div>
+                `;
+            } else {
+                authButton.innerHTML = '<button class="auth-trigger">Sign In</button>';
+            }
+        }
+    }
+
+    openModal() {
+        console.log('Opening auth modal...');
+        if (this.authModal) {
+            this.authModal.style.display = 'block';
+        }
+    }
+
+    closeModal() {
+        if (this.authModal) {
+            this.authModal.style.display = 'none';
+        }
+    }
+
+    showMessage(message, type) {
+        const existingMessage = document.querySelector('.auth-message');
+        if (existingMessage) existingMessage.remove();
+
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `auth-message ${type}`;
+        messageDiv.textContent = message;
+        document.body.appendChild(messageDiv);
+
+        setTimeout(() => messageDiv.remove(), 5000);
+    }
+
+    requireAuth(callback) {
+        if (this.currentUser) {
+            callback();
+        } else {
+            this.openModal();
+        }
+    }
+}
+
+// Initialize auth manager when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, initializing AuthManager...');
+    window.authManager = new AuthManager();
+});
